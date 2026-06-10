@@ -1,18 +1,15 @@
 package com.github.refal5lambda.psi;
 
-import com.github.refal5lambda.RefalFileType;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiReferenceBase;
-import com.intellij.psi.search.FileTypeIndex;
-import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.SmartPsiElementPointer;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 /**
  * Resolves a function call ({@link RefalCall}) to its definition: first in the same file, then in
@@ -35,12 +32,16 @@ final class RefalReference extends PsiReferenceBase<PsiElement> {
         RefalFunction local = findInFile(getElement().getContainingFile(), name);
         if (local != null) return local;
 
-        // 2) Anywhere else in the project.
-        Project project = getElement().getProject();
-        PsiManager psiManager = PsiManager.getInstance(project);
-        for (VirtualFile vf : FileTypeIndex.getFiles(RefalFileType.INSTANCE, GlobalSearchScope.projectScope(project))) {
-            RefalFunction fn = findInFile(psiManager.findFile(vf), name);
-            if (fn != null) return fn;
+        // 2) Anywhere else in the project — via the cached project-wide symbol map (built once per
+        //    PSI change and shared by all resolves and Go to Symbol), instead of rescanning and
+        //    parsing every Refal file on each resolve.
+        List<SmartPsiElementPointer<RefalFunction>> defs =
+                RefalProjectSymbols.get(getElement().getProject()).get(name);
+        if (defs != null) {
+            for (SmartPsiElementPointer<RefalFunction> pointer : defs) {
+                RefalFunction fn = pointer.getElement();
+                if (fn != null) return fn;
+            }
         }
         return null;
     }

@@ -51,6 +51,8 @@
         <lang.commenter
                 language="Refal5Lambda"
                 implementationClass="com.github.refal5lambda.RefalCommenter"/>
+        <gotoSymbolContributor
+                implementation="com.github.refal5lambda.RefalGotoSymbolContributor"/>
         <lang.findUsagesProvider
                 language="Refal5Lambda"
                 implementationClass="com.github.refal5lambda.RefalFindUsagesProvider"/>

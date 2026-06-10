@@ -30,7 +30,9 @@ Refal-5 Lambda** source files (`.ref`, `.refi`).
 - basic **code completion** (Ctrl+Space) for directive keywords, common built-in functions,
   function names defined in the current file, and the `s.`/`t.`/`e.` variables in scope
 - **navigation & refactoring**: Go to Declaration (Ctrl/Cmd+click a call jumps to its definition —
-  in the same file, or another project file declared via `$EXTERN`), Find Usages (Alt/Opt+F7), and
+  in the same file, or another project file declared via `$EXTERN`), **Go to Symbol**
+  (Ctrl+Alt+Shift+N / Cmd+Opt+O — jump to any function in the project by fuzzy name),
+  Find Usages (Alt/Opt+F7), and
   Rename (Shift+F6) — renaming a function updates all of its calls across the project
 - **quick documentation** (Ctrl/Cmd+Q, or hover): built-in functions show a short description;
   functions defined in the file show their header
@@ -213,6 +215,19 @@ examples/hello.ref, examples/showcase.ref     sample programs (see "Verify the p
 ```
 
 ## Design notes & limitations
+
+**Scalability** (measured against the largest real Refal-5λ codebase — the
+[compiler's own repository](https://github.com/bmstu-iu9/refal-5-lambda), 901 `.ref`/`.refi`
+files, ~1.3 MB): the hand-written lexer tokenizes that entire corpus in ~17 ms on commodity
+hardware, and highlighting is per-file and incremental anyway. Find Usages and Rename are backed
+by the IDE word index (only candidate files are parsed). Cross-file Go to Declaration and
+Go to Symbol share one cached project-wide symbol map, rebuilt lazily after a PSI change rather
+than rescanning the project per query. The plugin has no stub index — on a cold start or right
+after an edit, the first cross-file navigation rebuilds the map by walking project Refal files
+once; instant at these scales, but a stub-based index would be the next step for codebases of
+many thousands of files. The inline compiler check (`rlc --grammar-check`) is per-file and took
+0.25 s on the project's largest file (107 KB); it does not process `$INCLUDE`, so multi-file
+projects get no spurious include errors from it (verified against the real compiler).
 
 - Parsing is intentionally **lenient**: it never reports syntax errors, so valid code is never
   shown as red. Function bodies are modelled as sentences (`pattern = result ;`) with parenthesized
