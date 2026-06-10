@@ -1,0 +1,29 @@
+<templateSet group="Refal">
+  <template name="entry"
+            value="$$ENTRY Go {&#10;  = $END$;&#10;}"
+            description="Refal: program entry point (Go)"
+            toReformat="false" toShortenFQNames="false">
+    <context>
+      <option name="REFAL" value="true"/>
+    </context>
+  </template>
+  <template name="fn"
+            value="$NAME$ {&#10;  $PAT$ = $RES$;&#10;}"
+            description="Refal: function definition"
+            toReformat="false" toShortenFQNames="false">
+    <variable name="NAME" expression="" defaultValue="&quot;Func&quot;" alwaysStopAt="true"/>
+    <variable name="PAT" expression="" defaultValue="" alwaysStopAt="true"/>
+    <variable name="RES" expression="" defaultValue="" alwaysStopAt="true"/>
+    <context>
+      <option name="REFAL" value="true"/>
+    </context>
+  </template>
+  <template name="prout"
+            value="&lt;Prout $END$&gt;"
+            description="Refal: print to stdout"
+            toReformat="false" toShortenFQNames="false">
+    <context>
+      <option name="REFAL" value="true"/>
+    </context>
+  </template>
+</templateSet>

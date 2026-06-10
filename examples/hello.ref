@@ -1,0 +1,23 @@
+* hello.ref — a minimal, runnable Refal-5 Lambda program.
+* Compile & run with the toolchain:   rlc hello.ref   &&   ./hello
+/*
+ * This file is meant to compile and run.
+ * For a full tour of the highlighting features (including intentionally
+ * invalid bits), open showcase.ref instead.
+ */
+
+$ENTRY Go {
+  = <Greet 'Refal-5 Lambda'>
+    <Prout 'Factorial of 5 = ' <Symb <Fact 5>>>;
+}
+
+* Recursive factorial; s.N is a single symbol (a number here)
+Fact {
+  0   = 1;
+  s.N = <Mul s.N <Fact <Sub s.N 1>>>;
+}
+
+* Greet uses an e-variable (a whole expression) and a \n escape in a string
+Greet {
+  e.Name = <Prout 'Hello, ' e.Name '!\n'>;
+}

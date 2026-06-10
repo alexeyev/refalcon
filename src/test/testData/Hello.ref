@@ -1,0 +1,12 @@
+* a comment
+$EXTERN Mul, Sub;
+$ENTRY Go {
+  = <Fact 5>;
+}
+Fact {
+  0 = 1;
+  s.N = <Mul s.N <Fact <Sub s.N 1>>>;
+}
+Wrap {
+  e.X = (e.X);
+}

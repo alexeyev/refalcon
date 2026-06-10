@@ -1,0 +1,40 @@
+* showcase.ref — a tour of the editor features.
+* NOTE: this file intentionally contains invalid escapes and an unknown
+* directive so you can SEE the "invalid" colors. It is NOT meant to compile.
+
+   * <- this star is indented, so in Refal it is NOT a comment (column 0 only)
+
+/* A block comment.
+   Put the caret on it and use the gutter arrow to fold it. */
+
+$ENTRY Main;                 * known directive ($ENTRY)  -> keyword color
+$EXTERN Mul, Sub, Prout;     * another known directive
+$FOOBAR something;           * UNKNOWN directive -> should be flagged
+
+* Variables: s. (symbol), t. (term), e. (expression)
+Demo {
+  s.X t.Term e.Rest = <Prout s.X ' ' e.Rest>;
+}
+
+* Strings and escapes
+Strings {
+  = 'valid escapes: \n \t \x41'      * \n \t \x41 -> "valid escape" color
+    'invalid escapes: \q \x'         * \q and \x  -> "invalid escape" color
+    "double-quoted with an escaped quote: \"ok\"";
+}
+
+* A function call (Demo) sits right after '<'
+Caller {
+  e.Args = <Demo e.Args>;
+}
+
+%%
+  // Embedded native C++ block (between %% ... %%): one highlighted, foldable region.
+  // The plugin does not run a real C++ highlighter inside it.
+  refalrts::FnResult Example(refalrts::Iter b, refalrts::Iter e);
+%%
+
+* Brackets to eyeball: ( ) parentheses, < > activation, [ ] square
+Brackets {
+  = ( 'a' 'b' ) <Demo [ 1 2 3 ]>;
+}

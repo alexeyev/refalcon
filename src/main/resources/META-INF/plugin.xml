@@ -1,0 +1,88 @@
+<idea-plugin>
+    <id>io.github.alexeyev.refalcon</id>
+    <name>Refalcon</name>
+    <version>0.0.1</version>
+    <vendor url="https://alexeyev.github.io/">Anton Alekseev</vendor>
+
+    <description><![CDATA[Refalcon brings fast, sharp-eyed <b>Refal-5λ</b> language support to IntelliJ IDEA. It swoops in on your <code>.ref</code> and <code>.refi</code> files with lexer-based syntax highlighting (including string escapes) and a configurable color settings page, brace matching for <code>{ } ( ) &lt; &gt; [ ]</code>, line and block comments, code folding, a structure view of a file's functions, code completion (directives, built-ins, in-file functions, and in-scope variables), Go to Declaration / Find Usages / Rename including across files via <code>$EXTERN</code>, quick documentation, instant compiler-free error highlighting, and a run configuration that compiles and runs programs with the <code>rlc</code> toolchain.<br/>
+      Token rules were informed by the community VS Code extension (GDVFox/vscode-refal-5-lambda); the instant error highlighting is inspired by the Grammar-Kit coursework plugin bmstu-iu9/RefalFiveLambdaPlugin.]]></description>
+
+    <change-notes><![CDATA[
+      <b>0.0.1</b> &mdash; initial release. Syntax highlighting (with string-escape coloring) and a
+      color settings page; brace matching; line/block comments; code folding; a structure view of
+      functions; a sentence/pattern parser; code completion for directives, built-ins, in-file
+      functions and in-scope variables; navigation (Go to Declaration, Find Usages, Rename) including
+      across files via <code>$EXTERN</code>; quick documentation; instant compiler-free error
+      highlighting (<i>Unresolved function</i>/<i>Unresolved variable</i>); a run configuration that
+      compiles and runs with <code>rlc</code> (auto-detected), a run arrow at <code>Go</code>/<code>GO</code>,
+      and clickable + inline compiler diagnostics; a New &rarr; Refal File template and live templates.
+    ]]></change-notes>
+
+    <!-- Pure platform/lang features; no Java PSI needed. -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <fileType
+                name="Refal-5 Lambda"
+                implementationClass="com.github.refal5lambda.RefalFileType"
+                fieldName="INSTANCE"
+                language="Refal5Lambda"
+                extensions="ref;refi"/>
+        <lang.syntaxHighlighterFactory
+                language="Refal5Lambda"
+                implementationClass="com.github.refal5lambda.RefalSyntaxHighlighterFactory"/>
+        <colorSettingsPage
+                implementation="com.github.refal5lambda.RefalColorSettingsPage"/>
+        <lang.braceMatcher
+                language="Refal5Lambda"
+                implementationClass="com.github.refal5lambda.RefalBraceMatcher"/>
+        <lang.parserDefinition
+                language="Refal5Lambda"
+                implementationClass="com.github.refal5lambda.psi.RefalParserDefinition"/>
+        <lang.psiStructureViewFactory
+                language="Refal5Lambda"
+                implementationClass="com.github.refal5lambda.RefalStructureViewFactory"/>
+        <lang.foldingBuilder
+                language="Refal5Lambda"
+                implementationClass="com.github.refal5lambda.RefalFoldingBuilder"/>
+        <completion.contributor
+                language="Refal5Lambda"
+                implementationClass="com.github.refal5lambda.RefalCompletionContributor"/>
+        <lang.commenter
+                language="Refal5Lambda"
+                implementationClass="com.github.refal5lambda.RefalCommenter"/>
+        <lang.findUsagesProvider
+                language="Refal5Lambda"
+                implementationClass="com.github.refal5lambda.RefalFindUsagesProvider"/>
+        <lang.namesValidator
+                language="Refal5Lambda"
+                implementationClass="com.github.refal5lambda.RefalNamesValidator"/>
+        <lang.documentationProvider
+                language="Refal5Lambda"
+                implementationClass="com.github.refal5lambda.RefalDocumentationProvider"/>
+        <externalAnnotator
+                language="Refal5Lambda"
+                implementationClass="com.github.refal5lambda.RefalExternalAnnotator"/>
+        <annotator
+                language="Refal5Lambda"
+                implementationClass="com.github.refal5lambda.RefalAnnotator"/>
+        <internalFileTemplate name="Refal File"/>
+        <defaultLiveTemplates file="liveTemplates/Refal"/>
+        <liveTemplateContext
+                contextId="REFAL"
+                implementation="com.github.refal5lambda.RefalTemplateContextType"/>
+        <configurationType implementation="com.github.refal5lambda.run.RefalRunConfigurationType"/>
+        <runConfigurationProducer implementation="com.github.refal5lambda.run.RefalRunConfigurationProducer"/>
+        <runLineMarkerContributor language="Refal5Lambda"
+                                  implementationClass="com.github.refal5lambda.run.RefalRunLineMarkerContributor"/>
+    </extensions>
+
+    <actions>
+        <action id="Refal.NewFile"
+                class="com.github.refal5lambda.CreateRefalFileAction"
+                text="Refal File"
+                description="Create a new Refal-5 Lambda file">
+            <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFile"/>
+        </action>
+    </actions>
+</idea-plugin>
