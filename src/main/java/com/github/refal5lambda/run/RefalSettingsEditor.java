@@ -20,6 +20,7 @@ public final class RefalSettingsEditor extends SettingsEditor<RefalRunConfigurat
     private final RawCommandLineEditor compilerOptions = new RawCommandLineEditor();
     private final TextFieldWithBrowseButton sourceFile = new TextFieldWithBrowseButton();
     private final JBCheckBox runAfterCompile = new JBCheckBox("Run the compiled executable after a successful compile");
+    private final JBCheckBox useRlmake = new JBCheckBox("Build with rlmake (multi-file: follows *$FROM dependencies)");
     private final TextFieldWithBrowseButton outputExecutable = new TextFieldWithBrowseButton();
     private final RawCommandLineEditor programArguments = new RawCommandLineEditor();
     private final TextFieldWithBrowseButton workingDirectory = new TextFieldWithBrowseButton();
@@ -30,7 +31,7 @@ public final class RefalSettingsEditor extends SettingsEditor<RefalRunConfigurat
                 FileChooserDescriptorFactory.createSingleFileDescriptor()
                         .withTitle("Refal Compiler").withDescription("Select the rlc executable"));
         if (compilerPath.getTextField() instanceof JBTextField hint) {
-            hint.getEmptyText().setText("Auto-detect (rlc on PATH or in a standard install location)");
+            hint.getEmptyText().setText("Auto-detect (rlc/rlmake on PATH or in a standard install location)");
         }
         sourceFile.addBrowseFolderListener(project,
                 FileChooserDescriptorFactory.createSingleFileDescriptor()
@@ -46,6 +47,7 @@ public final class RefalSettingsEditor extends SettingsEditor<RefalRunConfigurat
                 .addLabeledComponent("Refal compiler (rlc):", compilerPath)
                 .addLabeledComponent("Compiler options:", compilerOptions)
                 .addLabeledComponent("Refal file:", sourceFile)
+                .addComponent(useRlmake)
                 .addComponent(runAfterCompile)
                 .addLabeledComponent("Output executable:", outputExecutable)
                 .addLabeledComponent("Program arguments:", programArguments)
@@ -59,6 +61,7 @@ public final class RefalSettingsEditor extends SettingsEditor<RefalRunConfigurat
         compilerOptions.setText(c.getCompilerOptions());
         sourceFile.setText(c.getSourceFile());
         runAfterCompile.setSelected(c.isRunAfterCompile());
+        useRlmake.setSelected(c.isUseRlmake());
         outputExecutable.setText(c.getOutputExecutable());
         programArguments.setText(c.getProgramArguments());
         workingDirectory.setText(c.getWorkingDirectory());
@@ -70,6 +73,7 @@ public final class RefalSettingsEditor extends SettingsEditor<RefalRunConfigurat
         c.setCompilerOptions(compilerOptions.getText());
         c.setSourceFile(sourceFile.getText());
         c.setRunAfterCompile(runAfterCompile.isSelected());
+        c.setUseRlmake(useRlmake.isSelected());
         c.setOutputExecutable(outputExecutable.getText());
         c.setProgramArguments(programArguments.getText());
         c.setWorkingDirectory(workingDirectory.getText());

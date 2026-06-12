@@ -30,6 +30,8 @@ public final class RefalRunConfiguration extends RunConfigurationBase<Object> {
     private String outputExecutable = "";
     private String programArguments = "";
     private String workingDirectory = "";
+    /** Build with rlmake instead of rlc: follows *$FROM comments and links all dependent units. */
+    private boolean useRlmake = false;
 
     public RefalRunConfiguration(@NotNull Project project, @NotNull ConfigurationFactory factory, String name) {
         super(project, factory, name);
@@ -53,9 +55,10 @@ public final class RefalRunConfiguration extends RunConfigurationBase<Object> {
             throw new RuntimeConfigurationError("Specify the Refal source file (.ref).");
         }
         String c = compilerPath == null ? "" : compilerPath.trim();
-        if ((c.isEmpty() || "rlc".equals(c)) && RefalCompilerLocator.detect() == null) {
+        String tool = useRlmake ? "rlmake" : "rlc";
+        if ((c.isEmpty() || "rlc".equals(c)) && RefalCompilerLocator.detectTool(tool) == null) {
             throw new RuntimeConfigurationWarning(
-                    "rlc was not found on PATH \u2014 install it (https://github.com/bmstu-iu9/refal-5-lambda) "
+                    tool + " was not found on PATH \u2014 install it (https://github.com/bmstu-iu9/refal-5-lambda) "
                     + "or set its full path here.");
         }
     }
@@ -70,6 +73,7 @@ public final class RefalRunConfiguration extends RunConfigurationBase<Object> {
         outputExecutable = orDefault(JDOMExternalizerUtil.readField(element, "outputExecutable"), "");
         programArguments = orDefault(JDOMExternalizerUtil.readField(element, "programArguments"), "");
         workingDirectory = orDefault(JDOMExternalizerUtil.readField(element, "workingDirectory"), "");
+        useRlmake = "true".equals(JDOMExternalizerUtil.readField(element, "useRlmake"));
     }
 
     @Override
@@ -82,6 +86,7 @@ public final class RefalRunConfiguration extends RunConfigurationBase<Object> {
         JDOMExternalizerUtil.writeField(element, "outputExecutable", outputExecutable);
         JDOMExternalizerUtil.writeField(element, "programArguments", programArguments);
         JDOMExternalizerUtil.writeField(element, "workingDirectory", workingDirectory);
+        JDOMExternalizerUtil.writeField(element, "useRlmake", Boolean.toString(useRlmake));
     }
 
     private static String orDefault(String value, String fallback) {
@@ -105,6 +110,9 @@ public final class RefalRunConfiguration extends RunConfigurationBase<Object> {
 
     public String getProgramArguments() { return programArguments; }
     public void setProgramArguments(String v) { programArguments = v; }
+
+    public boolean isUseRlmake() { return useRlmake; }
+    public void setUseRlmake(boolean v) { useRlmake = v; }
 
     public String getWorkingDirectory() { return workingDirectory; }
     public void setWorkingDirectory(String v) { workingDirectory = v; }

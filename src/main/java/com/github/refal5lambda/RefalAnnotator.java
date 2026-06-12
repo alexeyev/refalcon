@@ -68,7 +68,10 @@ public final class RefalAnnotator implements Annotator {
         FileNames names = names(call.getContainingFile(), holder);
         if (names.defined.contains(name) || names.declared.contains(name)) return;
         holder.newAnnotation(HighlightSeverity.ERROR, "Unresolved function: " + name)
-                .range(call).create();
+                .range(call)
+                .withFix(new RefalCreateFunctionFix(name))
+                .withFix(new RefalAddExternFix(name))
+                .create();
     }
 
     /** Defined-function names and directive-declared names, computed in one pass and cached. */

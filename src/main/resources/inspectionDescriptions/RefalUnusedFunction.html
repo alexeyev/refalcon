@@ -1,0 +1,13 @@
+<html>
+<body>
+Reports functions that are never called.
+<p>
+The inspection is conservative: <code>$ENTRY</code> functions (exported to other compilation
+units) and the program entry points <code>Go</code>/<code>GO</code> are never reported, and a
+function that is called anywhere in its own file — including only by itself — counts as used.
+For the remaining candidates a project-wide reference search must come up empty before the
+function is reported.
+</p>
+<!-- tooltip end -->
+</body>
+</html>

@@ -65,19 +65,25 @@ jobs:
         run: |
           mkdir -p site
           VERSION="${TAG#v}"
+          ZIP_VERSION="${ZIP_NAME#refalcon-}"; ZIP_VERSION="${ZIP_VERSION%.zip}"
+          if [ "$VERSION" != "$ZIP_VERSION" ]; then
+            echo "::error::Tag version ($VERSION) does not match the built plugin version ($ZIP_VERSION)."
+            echo "::error::Set 'version' in build.gradle.kts (and the change-notes) to $VERSION, or tag v$ZIP_VERSION."
+            exit 1
+          fi
           DOWNLOAD="${SERVER_URL}/${REPO}/releases/download/${TAG}/${ZIP_NAME}"
           {
             echo '<plugins>'
             echo "  <plugin id=\"io.github.alexeyev.refalcon\" url=\"${DOWNLOAD}\" version=\"${VERSION}\">"
             echo '    <idea-version since-build="243"/>'
-            echo '    <name>Refal-5 Lambda</name>'
-            echo '    <description><![CDATA[Refal-5 Lambda language support: highlighting, navigation, quick docs, and a run configuration.]]></description>'
+            echo '    <name>Refalcon</name>'
+            echo '    <description><![CDATA[Refalcon — Refal-5λ language support: highlighting, completion, project-wide navigation (incl. Go to Symbol), quick docs, inline compiler checks, and a run configuration with rlc auto-detection.]]></description>'
             echo '  </plugin>'
             echo '</plugins>'
           } > site/updatePlugins.xml
           {
-            echo '<!doctype html><meta charset="utf-8"><title>Refal-5 Lambda plugin repository</title>'
-            echo '<h1>Refal-5 Lambda &mdash; IntelliJ plugin repository</h1>'
+            echo '<!doctype html><meta charset="utf-8"><title>Refalcon plugin repository</title>'
+            echo '<h1>Refalcon &mdash; IntelliJ plugin repository</h1>'
             echo '<p>In the IDE: <b>Settings &rarr; Plugins &rarr; &#9881; &rarr; Manage Plugin Repositories</b>, then add this URL:</p>'
             echo '<pre>updatePlugins.xml</pre>'
             echo '<p>(Use the full URL of the <code>updatePlugins.xml</code> next to this page.)</p>'

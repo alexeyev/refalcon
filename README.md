@@ -34,9 +34,21 @@ Refal-5 Lambda** source files (`.ref`, `.refi`).
   (Ctrl+Alt+Shift+N / Cmd+Opt+O — jump to any function in the project by fuzzy name),
   Find Usages (Alt/Opt+F7), and
   Rename (Shift+F6) — renaming a function updates all of its calls across the project
+- **Unreachable-sentence inspection**: Refal tries sentences in order, and a lone `e.X`
+  pattern matches anything — sentences after it are dead code. Flagged narrowly: parentheses,
+  extra variables/symbols, or a where-clause make the pattern fallible and are never reported
+- **Unused function inspection** (Settings → Editor → Inspections → Refal): grays out functions
+  nothing calls — conservatively: `$ENTRY` functions and `Go`/`GO` are exported/entry API and are
+  never flagged, and cross-file usage is checked before reporting; also runs in batch via
+  Code → Inspect Code
+- **formatting**: Reformat Code (Ctrl+Alt+L / Cmd+Opt+L) with the canonical 2-space Refal style;
+  continuation lines (leading `=` / `,`) indent one extra level, spacing around `=` `:` `,` `;`
+  and inside `< >` `( )` is normalized, and your line structure is preserved. Column-0 `*`
+  comments are pinned — indenting them would turn them into code, so the formatter never does
 - **quick documentation** (Ctrl/Cmd+Q, or hover): built-in functions show a short description;
   functions defined in the file show their header
-- **instant error highlighting** (no compiler needed): an undefined function call (not a built-in,
+- **instant error highlighting** (no compiler needed) with **quick-fixes** — Alt+Enter on an
+  unresolved call offers *Create function* or *Add `$EXTERN`*: an undefined function call (not a built-in,
   standard-library, defined, or `$EXTERN`-declared name) is flagged as *Unresolved function*, and a
   variable used on the result side that the pattern never binds is flagged as *Unresolved variable*.
   This works as you type and complements the full `rlc` diagnostics below. The idea is borrowed from
@@ -55,6 +67,32 @@ toolchain needed) in the background and shows its **errors inline** in the edito
 **Boilerplate:** a *New → Refal File* entry that seeds a runnable skeleton, plus live templates —
 type `entry`, `fn`, or `prout` and press Tab to expand the program entry point, a function, or a
 `<Prout …>` call.
+
+## Dialects: classic Refal-5 and Refal-2
+
+Refalcon targets Refal-5λ, but `.ref` belongs to the whole family, so the plugin understands
+its relatives too:
+
+- **Classic Refal-5** works as-is — the λ syntax is a superset for editor purposes. `$ENTRY` /
+  `$EXTRN` / `$EXTERNAL` directives, `s.X`/`t.X`/`e.X` variables and column-0 `*` comments are
+  native here, and the classic built-ins (`Card`, `Print`, `Mu`, `Br`, `Dg`, …) are already in
+  the completion list and the resolver's known set.
+- **Refal-2** files are detected by content, because extensions cannot help: the historic
+  refal2-0.2.3 distribution uses `.ref` as well (verified against its sources). A `name start`
+  module header, bare `entry`/`extrn` directives, or a `k/name/` call switch the file to a
+  dedicated Refal-2 lexer and parser; any `$`-directive vetoes the switch. What works:
+  full highlighting (`/123/` macrodigits, `s1s2s3` variable chains, `V(D)X` specifier
+  variables, `+` line continuations, both call notations `<Name …>` and `k/name/ … .`),
+  brace matching for `( )`, `< >` and `k/ … .`, the structure view, comment toggling, find
+  usages, rename, and **case-insensitive** go-to-definition (`extrn print` ↔ `<Print …>`,
+  exactly as the real sources do) — in-file and across the project's Refal-2 files. Refal-2
+  functions also appear in Navigate → Symbol….
+
+Honest limits for Refal-2: no completion, formatter, run configuration, or λ-specific
+inspections — dialect support is deliberately compiler-independent. Rename and find-usages
+match exact case (the word index is case-sensitive) while navigation resolves
+case-insensitively. Grounding: the refal2-0.2.3 distribution's test programs and `xcv.ref`,
+plus its manual.
 
 ## Requirements
 
@@ -121,25 +159,39 @@ diagnostics and the Run button.
 
 **Windows (easiest):** download `setup-refal-5-lambda-<version>.exe` from the
 [latest release](https://github.com/bmstu-iu9/refal-5-lambda/releases/latest) and run it — it
-unpacks the toolchain into your user profile and adds it to your `PATH`. **Then restart the IDE**:
-a running IDE keeps the `PATH` it started with and will not see a freshly installed `rlc`.
+unpacks the toolchain into your user profile and adds it to your `PATH`. **No C++ compiler is
+needed on Windows**: by default programs link against prebuilt runtime *prefixes* (`slim`/`rich`)
+shipped with the installer (verified from the toolchain's own `rlc.bat`, which passes
+`--exesuffix=.exe` and an empty C++ command in this mode). **Then restart the IDE**: a running
+IDE keeps the `PATH` it started with and will not see a freshly installed `rlc`.
 
 **Linux / macOS:**
+
+macOS is officially supported (the toolchain's own CI builds on it); building needs a C++
+compiler — on macOS install the Xcode Command Line Tools first (`xcode-select --install`),
+on Linux `g++` from your package manager.
 
 ```bash
 git clone https://github.com/bmstu-iu9/refal-5-lambda
 cd refal-5-lambda && ./bootstrap.sh     # builds the toolchain with your C++ compiler
-# then add its bin/ directory to PATH (e.g. in ~/.bashrc or ~/.zshrc)
+# then add its bin/ to PATH (the official docs also set RL_MODULE_PATH to the same dir)
 ```
+
+If you clone into your home directory, the plugin auto-detects `~/refal-5-lambda/bin` (and
+`~/simple-refal-distrib/bin`) even before you update `PATH`.
 
 Open a **new** terminal and type `rlc` to verify (it prints usage). The plugin **auto-detects**
 `rlc` on the `PATH` and in standard install locations; you can always override it per run
 configuration via the **"Refal compiler (rlc)"** field.
 
-**Troubleshooting — `'rlc' is not recognized as an internal or external command`:** `rlc` isn't on
-the IDE's `PATH`. Restart the IDE after installing, or put the full path to `rlc` into the run
-configuration's compiler field (it has a browse button). If no compiler can be found at all, the
-Run action fails fast with these same instructions instead of the cryptic OS error.
+**Troubleshooting — `'rlc' is not recognized as an internal or external command`:** on Windows the
+toolchain ships **`rlc.bat`** (no `rlc.exe`), installed to **`%APPDATA%\Refal-5-lambda\bin`** —
+verified by inspecting the official installer. The plugin auto-detects it there *even if the
+IDE's `PATH` is stale*. If the shell still can't find it: restart the IDE after installing —
+and **restart JetBrains Toolbox too** if you launch through it (IDEs inherit Toolbox's old
+`PATH`) — or put the full path (e.g. `%APPDATA%\Refal-5-lambda\bin\rlc.bat`) into the run
+configuration's compiler field. On a genuine "command not found" exit, the Run console now
+appends these exact instructions.
 
 ## Running a Refal program
 
@@ -151,6 +203,10 @@ This plugin's run configuration drives that:
 2. In the configuration you can set:
    - **Refal compiler (rlc)** — path to the compiler. Leave it **empty to auto-detect**
      (`PATH` + standard install locations); set it only to pin a specific binary.
+   - **Build with rlmake** — check this for multi-file programs: `rlmake` follows `*$FROM Unit`
+     comments, compiles every dependent unit automatically, and links a single executable named
+     after the main file (verified against the real toolchain; on Windows `rlmake.bat` ships
+     alongside `rlc.bat` and is auto-detected the same way).
    - **Compiler options** — extra flags passed to the compiler.
    - **Refal file** — the `.ref` source.
    - **Run the compiled executable after a successful compile** — when on, the produced binary is

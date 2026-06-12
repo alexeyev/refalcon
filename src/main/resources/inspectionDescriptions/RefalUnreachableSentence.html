@@ -1,0 +1,13 @@
+<html>
+<body>
+Reports sentences that can never be reached because an earlier sentence in the same function
+has a catch-all pattern.
+<p>
+Refal tries sentences in order, and a pattern that is just a single e-variable
+(<code>e.X = &hellip;;</code>) matches any argument — everything after it is dead code. The check
+is deliberately narrow: parentheses, additional variables or symbols, and where-clauses
+(<code>, &hellip; : &hellip;</code>) all make the pattern fallible, so such sentences are not flagged.
+</p>
+<!-- tooltip end -->
+</body>
+</html>

@@ -1,6 +1,7 @@
 package com.github.refal5lambda.psi;
 
 import com.github.refal5lambda.RefalFileType;
+import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
@@ -45,6 +46,7 @@ public final class RefalProjectSymbols {
         PsiManager psiManager = PsiManager.getInstance(project);
         SmartPointerManager pointers = SmartPointerManager.getInstance(project);
         for (VirtualFile vf : FileTypeIndex.getFiles(RefalFileType.INSTANCE, GlobalSearchScope.projectScope(project))) {
+            ProgressManager.checkCanceled();   // project walk must stay cancellable (typed-action responsiveness)
             PsiFile file = psiManager.findFile(vf);
             if (!(file instanceof RefalFile)) continue;
             for (RefalFunction fn : PsiTreeUtil.findChildrenOfType(file, RefalFunction.class)) {

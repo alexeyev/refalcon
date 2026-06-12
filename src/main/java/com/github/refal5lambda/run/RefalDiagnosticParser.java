@@ -2,6 +2,7 @@ package com.github.refal5lambda.run;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -72,7 +73,7 @@ public final class RefalDiagnosticParser {
     }
 
     private static String normalize(String severity) {
-        String s = severity.toLowerCase();
+        String s = severity.toLowerCase(Locale.ROOT);   // locale-independent (Turkish-I safe)
         if (s.contains("warn")) return "warning";
         if (s.equals("note")) return "note";
         return "error";

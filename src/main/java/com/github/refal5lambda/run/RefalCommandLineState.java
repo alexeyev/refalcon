@@ -6,6 +6,9 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.filters.TextConsoleBuilder;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.process.KillableColoredProcessHandler;
+import com.intellij.execution.process.ProcessAdapter;
+import com.intellij.execution.process.ProcessEvent;
+import com.intellij.execution.process.ProcessOutputTypes;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.process.ProcessTerminatedListener;
 import com.intellij.execution.runners.ExecutionEnvironment;
@@ -28,15 +31,22 @@ import java.nio.charset.StandardCharsets;
  */
 final class RefalCommandLineState extends CommandLineState {
 
-    static final String RLC_NOT_FOUND =
-            "Refal compiler (rlc) was not found on PATH or in standard install locations.\n\n"
-            + "Install it:\n"
-            + "  \u2022 Windows: download and run setup-refal-5-lambda-<version>.exe from\n"
-            + "    https://github.com/bmstu-iu9/refal-5-lambda/releases/latest\n"
-            + "    then RESTART the IDE so it picks up the updated PATH.\n"
-            + "  \u2022 Linux/macOS: git clone https://github.com/bmstu-iu9/refal-5-lambda,\n"
-            + "    run ./bootstrap.sh inside it, and add its bin/ directory to PATH.\n\n"
-            + "Or set the full path to rlc in the Run Configuration field \"Refal compiler (rlc)\".";
+    /** Appended to the console when the shell itself reports "command not found" (9009 cmd / 127 sh). */
+    static String commandNotFoundHint(int exitCode) {
+        return "\n[Refalcon] The shell could not find a command (exit code " + exitCode + ").\n"
+                + "If the missing command is the Refal compiler (rlc):\n"
+                + "  \u2022 Windows: install setup-refal-5-lambda-<version>.exe from\n"
+                + "    https://github.com/bmstu-iu9/refal-5-lambda/releases/latest\n"
+                + "    (it puts rlc.bat into %APPDATA%\\Refal-5-lambda\\bin and adds it to the user PATH;\n"
+                + "    no separate C++ compiler is needed \u2014 prebuilt runtime prefixes are included),\n"
+                + "    then RESTART the IDE \u2014 and JetBrains Toolbox too if you launch through it,\n"
+                + "    since IDEs inherit Toolbox's (possibly stale) PATH.\n"
+                + "  \u2022 Linux/macOS: git clone https://github.com/bmstu-iu9/refal-5-lambda,\n"
+                + "    run ./bootstrap.sh inside it (needs a C++ compiler; macOS: xcode-select --install),\n"
+                + "    and add its bin/ directory to PATH.\n"
+                + "Or set the full path to rlc in the Run Configuration field \"Refal compiler (rlc)\".\n"
+                + "(The plugin also auto-detects rlc in %APPDATA%\\Refal-5-lambda even when PATH is stale.)\n";
+    }
 
     private final RefalRunConfiguration config;
 
@@ -53,10 +63,7 @@ final class RefalCommandLineState extends CommandLineState {
     @NotNull
     @Override
     protected ProcessHandler startProcess() throws ExecutionException {
-        String compiler = resolveCompiler(config.getCompilerPath());
-        if (compiler == null) {
-            throw new ExecutionException(RLC_NOT_FOUND);
-        }
+        String compiler = resolveCompiler(config.getCompilerPath(), config.isUseRlmake());
         if (looksLikePath(compiler) && !new File(compiler).isFile()) {
             throw new ExecutionException("Refal compiler not found at: " + compiler
                     + "\nFix the \"Refal compiler (rlc)\" field in the Run Configuration, or clear it to auto-detect.");
@@ -88,14 +95,30 @@ final class RefalCommandLineState extends CommandLineState {
 
         KillableColoredProcessHandler handler = new KillableColoredProcessHandler(cmd);
         ProcessTerminatedListener.attach(handler);
+        handler.addProcessListener(new ProcessAdapter() {
+            @Override
+            public void processTerminated(@NotNull ProcessEvent event) {
+                int code = event.getExitCode();
+                if (code == 9009 || code == 127) {   // cmd.exe / POSIX sh: command not found
+                    handler.notifyTextAvailable(commandNotFoundHint(code), ProcessOutputTypes.STDERR);
+                }
+            }
+        });
         return handler;
     }
 
-    /** Explicit values are trusted as-is; a blank field or the legacy {@code "rlc"} auto-detects. */
-    static @Nullable String resolveCompiler(@Nullable String configured) {
+    /**
+     * Explicit values are trusted as-is; a blank field or the legacy {@code "rlc"} auto-detects.
+     * If detection finds nothing, returns literal {@code "rlc"} so the OS shell still gets its
+     * chance (on Windows, PATHEXT lets cmd find {@code rlc.bat} even where our scan might not) —
+     * a genuine "command not found" is then explained by the console hint, never blocked up front.
+     */
+    static @NotNull String resolveCompiler(@Nullable String configured, boolean useRlmake) {
         String c = configured == null ? "" : configured.trim();
         if (!c.isEmpty() && !"rlc".equals(c)) return c;
-        return RefalCompilerLocator.detect();
+        String tool = useRlmake ? "rlmake" : "rlc";
+        String detected = RefalCompilerLocator.detectTool(tool);
+        return detected != null ? detected : tool;
     }
 
     /**

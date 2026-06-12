@@ -1,0 +1,11 @@
+<html>
+<body>
+Reports indented lines that begin with <code>*</code>.
+<p>
+In every Refal dialect (Refal-2, Refal-5, Refal-5λ) an asterisk starts a comment <b>only at
+column 0</b>. Once indented, the line is ordinary code and the compiler rejects it — a classic
+trap when re-indenting. The quick-fix moves the line back to column 0.
+</p>
+<!-- tooltip end -->
+</body>
+</html>

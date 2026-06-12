@@ -4,18 +4,32 @@
     <version>0.0.1</version>
     <vendor url="https://alexeyev.github.io/">Anton Alekseev</vendor>
 
-    <description><![CDATA[Refalcon brings fast, sharp-eyed <b>Refal-5λ</b> language support to IntelliJ IDEA. It swoops in on your <code>.ref</code> and <code>.refi</code> files with lexer-based syntax highlighting (including string escapes) and a configurable color settings page, brace matching for <code>{ } ( ) &lt; &gt; [ ]</code>, line and block comments, code folding, a structure view of a file's functions, code completion (directives, built-ins, in-file functions, and in-scope variables), Go to Declaration / Find Usages / Rename including across files via <code>$EXTERN</code>, quick documentation, instant compiler-free error highlighting, and a run configuration that compiles and runs programs with the <code>rlc</code> toolchain.<br/>
+    <description><![CDATA[Refalcon brings fast, sharp-eyed <b>Refal-5λ</b> language support to IntelliJ IDEA. It swoops in on your <code>.ref</code> and <code>.refi</code> files with lexer-based syntax highlighting (including string escapes and distinctly colored activation brackets) and a configurable color settings page, brace matching for <code>{ } ( ) &lt; &gt; [ ]</code>, line and block comments, code folding, a structure view of a file's functions, code completion (directives, built-ins, in-file functions, and in-scope variables), navigation that scales &mdash; Go to Declaration, <b>Go to Symbol</b>, Find Usages and Rename, including across files via <code>$EXTERN</code>, backed by a cached project-wide symbol index &mdash; quick documentation, an <i>Unused function</i> inspection, instant compiler-free error highlighting with quick-fixes (create function / add <code>$EXTERN</code>), a code formatter in the canonical 2-space Refal style (column-0 <code>*</code> comments stay pinned), fast background syntax checks via <code>rlc --grammar-check</code> shown inline, and a run configuration that compiles and runs programs with the <code>rlc</code> toolchain &mdash; or <code>rlmake</code> for multi-file programs (follows <code>*$FROM</code>) &mdash; auto-detected on the PATH and in standard install locations (on Windows, <code>rlc.bat</code> under <code>%APPDATA%\Refal-5-lambda</code> is found even when the IDE's PATH is stale).
+      Dialect-aware: classic <b>Refal-5</b> sources work as-is, and <b>Refal-2</b> files are detected by
+      content (<code>name start</code> headers, bare <code>entry</code>/<code>extrn</code>, <code>k/name/</code> calls) and get their own
+      lexer with highlighting, structure view, brace matching and case-insensitive go-to-definition.<br/>
       Token rules were informed by the community VS Code extension (GDVFox/vscode-refal-5-lambda); the instant error highlighting is inspired by the Grammar-Kit coursework plugin bmstu-iu9/RefalFiveLambdaPlugin.]]></description>
 
     <change-notes><![CDATA[
-      <b>0.0.1</b> &mdash; initial release. Syntax highlighting (with string-escape coloring) and a
-      color settings page; brace matching; line/block comments; code folding; a structure view of
-      functions; a sentence/pattern parser; code completion for directives, built-ins, in-file
-      functions and in-scope variables; navigation (Go to Declaration, Find Usages, Rename) including
-      across files via <code>$EXTERN</code>; quick documentation; instant compiler-free error
-      highlighting (<i>Unresolved function</i>/<i>Unresolved variable</i>); a run configuration that
-      compiles and runs with <code>rlc</code> (auto-detected), a run arrow at <code>Go</code>/<code>GO</code>,
-      and clickable + inline compiler diagnostics; a New &rarr; Refal File template and live templates.
+      <b>0.0.1</b> &mdash; initial release. Syntax highlighting (string escapes, distinct activation
+      brackets) and a color settings page; brace matching; line/block comments; code folding; a
+      structure view of functions; a sentence/pattern parser; code completion for directives,
+      built-ins, in-file functions and in-scope variables; navigation backed by a cached
+      project-wide symbol index &mdash; Go to Declaration, Go to Symbol, Find Usages, Rename,
+      including across files via <code>$EXTERN</code>; quick documentation; instant compiler-free
+      error highlighting (<i>Unresolved function</i>/<i>Unresolved variable</i>) with quick-fixes
+      (create function / add <code>$EXTERN</code>); a code formatter (canonical 2-space style,
+      column-0 <code>*</code> comments stay pinned); an <i>Unused function</i> inspection; fast inline
+      compiler diagnostics via <code>rlc --grammar-check</code>; a run configuration that compiles
+      and runs with <code>rlc</code> or <code>rlmake</code> (multi-file via <code>*$FROM</code>; auto-detected, incl. <code>rlc.bat</code> in
+      <code>%APPDATA%\Refal-5-lambda</code> on Windows), a run arrow at <code>Go</code>/<code>GO</code>,
+      clickable diagnostics (absolute Windows paths included), helpful guidance when the compiler is
+      missing; a New &rarr; Refal File template and live templates; <b>Refal-2 dialect support</b>
+      (content-detected on <code>.ref</code>: dedicated lexer/parser, highlighting incl. <code>/123/</code> macrodigits and
+      <code>k/name/ &hellip; .</code> calls, structure view, brace matching, find usages, case-insensitive navigation)
+      and an <i>Indented asterisk</i> inspection with a move-to-column-0 quick-fix (all dialects);
+      an <i>Unreachable sentences after a catch-all pattern</i> inspection; Refal-2 functions in
+      Navigate &rarr; Symbol.
     ]]></change-notes>
 
     <!-- Pure platform/lang features; no Java PSI needed. -->
@@ -51,8 +65,53 @@
         <lang.commenter
                 language="Refal5Lambda"
                 implementationClass="com.github.refal5lambda.RefalCommenter"/>
+        <!-- Refal-2 dialect: same .ref file type, selected per file by content -->
+        <lang.substitutor language="Refal5Lambda"
+                implementationClass="com.github.refal5lambda.r2.RefalDialectSubstitutor"/>
+        <lang.parserDefinition language="Refal2"
+                implementationClass="com.github.refal5lambda.r2.Refal2ParserDefinition"/>
+        <lang.syntaxHighlighterFactory language="Refal2"
+                implementationClass="com.github.refal5lambda.r2.Refal2SyntaxHighlighter$Factory"/>
+        <lang.braceMatcher language="Refal2"
+                implementationClass="com.github.refal5lambda.r2.Refal2BraceMatcher"/>
+        <lang.commenter language="Refal2"
+                implementationClass="com.github.refal5lambda.r2.Refal2Commenter"/>
+        <lang.findUsagesProvider language="Refal2"
+                implementationClass="com.github.refal5lambda.r2.Refal2FindUsagesProvider"/>
+        <lang.psiStructureViewFactory language="Refal2"
+                implementationClass="com.github.refal5lambda.r2.Refal2StructureViewFactory"/>
+        <localInspection
+                language="Refal5Lambda"
+                shortName="RefalUnreachableSentence"
+                displayName="Unreachable sentences after a catch-all pattern"
+                groupName="Refal"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="com.github.refal5lambda.RefalUnreachableSentenceInspection"/>
+        <localInspection
+                shortName="RefalIndentedStarComment"
+                displayName="Indented '*' is not a comment"
+                groupName="Refal"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="com.github.refal5lambda.RefalIndentedStarCommentInspection"/>
+        <localInspection
+                language="Refal5Lambda"
+                shortName="RefalUnusedFunction"
+                displayName="Unused function"
+                groupName="Refal"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="com.github.refal5lambda.RefalUnusedFunctionInspection"/>
+        <lang.formatter
+                language="Refal5Lambda"
+                implementationClass="com.github.refal5lambda.RefalFormattingModelBuilder"/>
+        <langCodeStyleSettingsProvider
+                implementation="com.github.refal5lambda.RefalLanguageCodeStyleSettingsProvider"/>
         <gotoSymbolContributor
                 implementation="com.github.refal5lambda.RefalGotoSymbolContributor"/>
+        <gotoSymbolContributor
+                implementation="com.github.refal5lambda.r2.Refal2GotoSymbolContributor"/>
         <lang.findUsagesProvider
                 language="Refal5Lambda"
                 implementationClass="com.github.refal5lambda.RefalFindUsagesProvider"/>
