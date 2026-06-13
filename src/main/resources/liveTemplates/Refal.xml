@@ -26,4 +26,31 @@
       <option name="REFAL" value="true"/>
     </context>
   </template>
+  <template name="extern"
+            value="$$EXTERN $FN$;"
+            description="Refal: declare an external function"
+            toReformat="false" toShortenFQNames="false">
+    <variable name="FN" expression="" defaultValue="&quot;Func&quot;" alwaysStopAt="true"/>
+    <context>
+      <option name="REFAL" value="true"/>
+    </context>
+  </template>
+  <template name="call"
+            value="&lt;$FN$ $ARGS$&gt;$END$"
+            description="Refal: function call"
+            toReformat="false" toShortenFQNames="false">
+    <variable name="FN" expression="" defaultValue="&quot;Func&quot;" alwaysStopAt="true"/>
+    <variable name="ARGS" expression="" defaultValue="" alwaysStopAt="true"/>
+    <context>
+      <option name="REFAL" value="true"/>
+    </context>
+  </template>
+  <template name="proutq"
+            value="&lt;Prout '$END$'&gt;"
+            description="Refal: print a quoted string to stdout"
+            toReformat="false" toShortenFQNames="false">
+    <context>
+      <option name="REFAL" value="true"/>
+    </context>
+  </template>
 </templateSet>

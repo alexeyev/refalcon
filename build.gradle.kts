@@ -46,10 +46,16 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            // Verify binary compatibility against the supported baseline IDE (reused from the
-            // compile dependency above, so this needs no extra download). Add recommended() or a
-            // newer build here to widen coverage.
+            // Always verify the supported floor (2024.3 == sinceBuild). This is reused from the
+            // compile dependency above, so it needs no extra download and runs even offline.
             create(IntelliJPlatformType.IntellijIdeaCommunity, "2024.3")
+            // Widen coverage to the currently-recommended releases (latest patches of recent
+            // majors, up to the newest). Because the plugin leaves untilBuild open, it claims
+            // forward compatibility, and this is what actually checks that claim against newer
+            // IDEs. The list is fetched from JetBrains' product-releases metadata and each IDE is
+            // downloaded at verification time, so this requires network: it runs in CI
+            // (.github/workflows/build.yml -> ./gradlew verifyPlugin), not in an offline sandbox.
+            recommended()
         }
     }
 }

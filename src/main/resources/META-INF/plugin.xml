@@ -29,7 +29,11 @@
       <code>k/name/ &hellip; .</code> calls, structure view, brace matching, find usages, case-insensitive navigation)
       and an <i>Indented asterisk</i> inspection with a move-to-column-0 quick-fix (all dialects);
       an <i>Unreachable sentences after a catch-all pattern</i> inspection; Refal-2 functions in
-      Navigate &rarr; Symbol.
+      Navigate &rarr; Symbol; a <i>Duplicate function definition</i> inspection; TODO/FIXME markers and
+      breadcrumbs in both dialects; and more live templates (<code>call</code>, <code>extern</code>, <code>proutq</code>); content-aware dialect
+      detection (ignores Refal-2-looking tokens inside strings/comments; a brace block or <code>$</code>-directive
+      marks Refal-5/5&lambda;) with an explicit <code>* refal-2</code> / <code>* refal-5</code> override comment; and a
+      distinct Refal-2 file icon.
     ]]></change-notes>
 
     <!-- Pure platform/lang features; no Java PSI needed. -->
@@ -97,6 +101,14 @@
                 implementationClass="com.github.refal5lambda.RefalIndentedStarCommentInspection"/>
         <localInspection
                 language="Refal5Lambda"
+                shortName="RefalDuplicateFunction"
+                displayName="Duplicate function definition"
+                groupName="Refal"
+                enabledByDefault="true"
+                level="WARNING"
+                implementationClass="com.github.refal5lambda.RefalDuplicateFunctionInspection"/>
+        <localInspection
+                language="Refal5Lambda"
                 shortName="RefalUnusedFunction"
                 displayName="Unused function"
                 groupName="Refal"
@@ -136,6 +148,12 @@
         <runConfigurationProducer implementation="com.github.refal5lambda.run.RefalRunConfigurationProducer"/>
         <runLineMarkerContributor language="Refal5Lambda"
                                   implementationClass="com.github.refal5lambda.run.RefalRunLineMarkerContributor"/>
+        <!-- TODO/FIXME markers in Refal comments (both dialects) -->
+        <indexPatternBuilder implementation="com.github.refal5lambda.RefalIndexPatternBuilder"/>
+        <!-- Show the enclosing function in the breadcrumb bar (both dialects) -->
+        <breadcrumbsInfoProvider implementation="com.github.refal5lambda.RefalBreadcrumbsProvider"/>
+        <!-- Per-dialect file icons (chosen by detected language) -->
+        <iconProvider implementation="com.github.refal5lambda.r2.RefalDialectIconProvider"/>
     </extensions>
 
     <actions>

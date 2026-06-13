@@ -34,6 +34,13 @@ Refal-5 Lambda** source files (`.ref`, `.refi`).
   (Ctrl+Alt+Shift+N / Cmd+Opt+O — jump to any function in the project by fuzzy name),
   Find Usages (Alt/Opt+F7), and
   Rename (Shift+F6) — renaming a function updates all of its calls across the project
+- **Duplicate-function inspection**: flags a function name defined more than once in a file
+  (a redefinition the compiler would reject), highlighting every clashing definition
+- **TODO / FIXME** markers inside Refal comments light up and appear in the TODO tool window
+  (both dialects)
+- **Breadcrumbs** show the enclosing function while scrolling a long file (both dialects)
+- **Live templates**: `entry`, `fn`, `call`, `extern`, `prout`, `proutq` expand with Tab;
+  **File → New → Refal File** starts from a runnable skeleton
 - **Unreachable-sentence inspection**: Refal tries sentences in order, and a lone `e.X`
   pattern matches anything — sentences after it are dead code. Flagged narrowly: parentheses,
   extra variables/symbols, or a where-clause make the pattern fallible and are never reported
@@ -80,7 +87,13 @@ its relatives too:
 - **Refal-2** files are detected by content, because extensions cannot help: the historic
   refal2-0.2.3 distribution uses `.ref` as well (verified against its sources). A `name start`
   module header, bare `entry`/`extrn` directives, or a `k/name/` call switch the file to a
-  dedicated Refal-2 lexer and parser; any `$`-directive vetoes the switch. What works:
+  dedicated Refal-2 lexer and parser. Detection is content-aware: strings and comments are
+  ignored (so a `k/...` inside a string or comment can't misfire), and a `$`-directive or a brace
+  block — neither of which exists in Refal-2 — marks the file as Refal-5/5λ. When detection would
+  be ambiguous (e.g. a Refal-2 fragment with no module header), a standalone comment **`* refal-2`**
+  (or `* refal-5` / `* dialect: refal-2`) at the top forces the dialect deterministically. Each
+  dialect also has its **own file icon** — a green "2" glyph for Refal-2, the blue glyph for
+  Refal-5λ. What works:
   full highlighting (`/123/` macrodigits, `s1s2s3` variable chains, `V(D)X` specifier
   variables, `+` line continuations, both call notations `<Name …>` and `k/name/ … .`),
   brace matching for `( )`, `< >` and `k/ … .`, the structure view, comment toggling, find
@@ -312,8 +325,12 @@ projects get no spurious include errors from it (verified against the real compi
 - `./gradlew test` runs the unit tests: fast, IntelliJ-free tests for the scanner
   (`RefalScannerTest`) plus a `ParsingTestCase` (`RefalParsingTest`) that checks the produced PSI
   tree against `src/test/testData/Hello.txt`.
-- `./gradlew verifyPlugin` runs the JetBrains Plugin Verifier against the baseline IDE to check
-  binary compatibility and plugin-descriptor validity.
+- `./gradlew verifyPlugin` runs the JetBrains Plugin Verifier to check binary compatibility and
+  plugin-descriptor validity. It targets the supported floor (2024.3, `sinceBuild`) **plus the
+  currently-recommended releases** (`recommended()` — the latest patches of recent majors): since
+  the plugin leaves `untilBuild` open and so claims forward compatibility, this is what actually
+  exercises that claim against newer IDEs. The recommended set is downloaded at verification time,
+  so it needs network and runs in CI rather than offline.
 - GitHub Actions (`.github/workflows/build.yml`) runs `check buildPlugin` and the verifier on every
   push and pull request and uploads the built zip; `release.yml` builds the plugin and attaches the
   zip to a GitHub Release when you push a `vX.Y.Z` tag.
